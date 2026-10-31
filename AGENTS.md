@@ -1,7 +1,9 @@
 # mac-mod
 
 - Tema desktop macOS: clean minimal, terinspirasi dashboard pilot Gundam.
-- Utamakan Übersicht, SVG/CSS, dan tool bawaan macOS. Tambahkan dependency hanya bila diperlukan.
+- Gunakan wallpaper raster sungguhan dan panel native macOS berbahan kaca transparan; jangan menutupi desktop dengan widget fullscreen.
+- Utamakan SwiftUI/AppKit dan API sensor bawaan macOS. Widget harus interaktif dan menampilkan data nyata.
+- Gunakan Dock bawaan macOS di bawah; jangan membuat dock aplikasi tambahan.
 - Telemetry harus berasal dari sistem; data yang tidak tersedia ditampilkan sebagai N/A.
 - Cadangkan pengaturan sebelum mengubah desktop; sediakan cara mengembalikannya.
 - Jangan commit backup pengaturan, data pribadi, atau hasil telemetry mesin.

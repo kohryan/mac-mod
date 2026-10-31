@@ -1,71 +1,65 @@
 # mac-mod
 
-Desktop ricing untuk macOS: **clean minimal × dashboard pilot Gundam**.
+**Clean minimal × Gundam cockpit**, dengan wallpaper gambar sungguhan dan widget native macOS berbahan kaca transparan.
 
-Palet graphite dan cyan redup, tipografi tipis, schematic RX-78-2, jam WIB, serta telemetry Mac. Ruang tengah tetap lapang untuk bekerja. Ilustrasi SVG dibuat khusus untuk tema ini; proyek fan-made, tidak berafiliasi dengan pemilik Gundam.
+![Gundam orbital hangar wallpaper](assets/wallpapers/gundam-hangar.png)
 
-## Isi tema
+Wallpaper PNG diterapkan melalui pengaturan desktop macOS. Panel console, telemetry, dan kalender memakai SwiftUI/AppKit dan `NSVisualEffectView`; semuanya menerima klik, dapat digeser, dan berada di belakang jendela aplikasi biasa. Dock memakai bawaan macOS di bagian bawah layar.
 
-- Latar desktop dinamis dengan panel kokpit dan ilustrasi teknis RX-78-2.
-- Jam dan tanggal Asia/Jakarta, callsign `KOHRYAN`.
-- Persentase baterai, sumber daya, load average 1 menit, logical CPU cores, dan RAM terpasang.
-- Dock auto-hide, ukuran 36, recent apps disembunyikan.
-- Backup pengaturan Dock dan perintah restore. Wallpaper asli tidak diubah.
+## Widget yang berfungsi
 
-Load average adalah jumlah rata-rata pekerjaan yang menunggu atau memakai CPU, bukan persentase CPU. RAM yang ditampilkan adalah kapasitas terpasang. Data yang tidak tersedia ditampilkan sebagai `N/A`. Telemetry diperbarui setiap 10 detik dan tidak dikirim ke jaringan.
+- **Jam WIB** berdetik, diperbarui setiap detik.
+- **Focus timer 25 menit**: Start, Pause, Resume, Reset, dan bunyi saat selesai. Timer memakai deadline waktu nyata sehingga tetap benar setelah Mac tidur.
+- **Kalender kaca** dengan highlight hari ini, pilihan tanggal, navigasi bulan, Today, dan tombol membuka aplikasi Calendar. Kalender ini tidak membaca agenda pribadi.
+- **Dock bawaan macOS** diposisikan di bawah. Ukuran dan perilakunya bisa diatur melalui System Settings → Desktop & Dock.
+- **CPU usage nyata** dari delta counter Mach, grafik riwayat 60 sampel, diperbarui setiap detik.
+- **RAM aktif + wired + compressed** dari statistik VM macOS, diperbarui setiap dua detik. Definisinya berbeda dari keseluruhan Memory Used di Activity Monitor.
+- **Baterai dan sumber daya** melalui IOKit, diperbarui setiap sepuluh detik.
 
-## Pasang
+Seret bagian kosong panel untuk memindahkannya. Posisi disimpan oleh AppKit. Ikon CPU di menu bar menyediakan kontrol panel, wallpaper, dan Quit.
 
-Memerlukan macOS 12+, [Homebrew](https://brew.sh/), dan Python 3. Node.js hanya diperlukan untuk menjalankan tes parser.
+## Build dan pasang
+
+Memerlukan macOS 13+, Xcode Command Line Tools (Swift compiler), dan Python 3 untuk script pengaturan Dock. Runtime widget tidak memakai dependency pihak ketiga.
 
 ```sh
 git clone https://github.com/kohryan/mac-mod.git
 cd mac-mod
-brew bundle --file=Brewfile
-python3 scripts/desktop.py apply
+bash scripts/install.sh
+open ~/Applications/MacMod.app
 ```
 
-Buka **Übersicht** dari Applications. Tema langsung muncul di desktop. Di menu Übersicht, gunakan **Open Widgets Folder** bila ingin melihat lokasi widget. Aktifkan **Open at login** di preferensi Übersicht bila ingin tema muncul setelah login.
+Installer membuat `~/Applications/MacMod.app` dari source Swift. Saat pertama dibuka, aplikasi menyimpan backup wallpaper lalu memasang `assets/wallpapers/gundam-hangar.png` sebagai wallpaper desktop. Startup selanjutnya tidak memaksa wallpaper ulang. Installer hanya memindahkan posisi Dock ke bawah; ukuran, auto-hide, dan daftar aplikasi mengikuti pengaturan pengguna. Aplikasi ditandatangani ad hoc untuk penggunaan lokal.
 
-Widget dipasang sebagai symlink ke repo ini. Simpan folder repo di lokasi tetap; perubahan file widget akan dimuat ulang oleh Übersicht. Script akan menolak menimpa widget atau backup yang sudah ada.
+**Start at Login aktif saat pertama dibuka**, memakai ServiceManagement macOS. Widget muncul kembali setelah Mac dinyalakan dan pengguna login. Opsi ini bisa dimatikan dari menu MacMod di menu bar atau System Settings → General → Login Items. Jika macOS meminta persetujuan, aktifkan MacMod pada panel Login Items yang terbuka.
 
-## Kembali ke tampilan sebelumnya
+## Kembali ke sebelumnya
 
 ```sh
 python3 scripts/desktop.py restore
 ```
 
-Perintah ini melepas widget dan mengembalikan nilai Dock sebelum pemasangan, termasuk preferensi yang sebelumnya belum disetel. Backup lokal berada di `~/Library/Application Support/mac-mod/`; backup tidak masuk Git. Übersicht tetap terpasang dan bisa dihapus terpisah dengan `brew uninstall --cask ubersicht` bila tidak dipakai widget lain.
+Script mengembalikan wallpaper, mematikan Start at Login, menutup widget, dan memulihkan nilai Dock sebelum pemasangan, termasuk posisi semula. Backup lokal berada di `~/Library/Application Support/mac-mod/` dan tidak masuk Git. Wallpaper dinamis macOS yang tidak memberikan URL gambar memiliki salinan pengaturan asli, tetapi pemilihannya kembali perlu dilakukan lewat System Settings.
 
-## Kustomisasi
+**Restore Previous Wallpaper** di menu bar hanya mengganti wallpaper; panel tetap bisa dipakai di atas wallpaper lain. **Quit MacMod** menutup panel tanpa mengubah wallpaper.
 
-Edit `config/uebersicht/mac-mod.widget/index.jsx`:
-
-- `KOHRYAN`: callsign pilot.
-- `#8ed4d9`: warna aksen cyan.
-- `Asia/Jakarta`: zona waktu jam.
-- `.left`, `.right`, `.blueprint`: posisi panel.
-- `refreshFrequency`: interval telemetry dalam milidetik.
-
-Übersicht mendeteksi perubahan otomatis. Pilih **Refresh All Widgets** di menu aplikasi bila perubahan belum terlihat. Tata letak ditujukan untuk desktop landscape dengan lebar setidaknya 1024 px.
-
-## Tool mod macOS
-
-| Bagian desktop | Tool | Status dalam repo |
-| --- | --- | --- |
-| Widget dan latar kokpit | [Übersicht](https://tracesof.net/uebersicht/) | Digunakan tema ini |
-| Menu bar kustom | [SketchyBar](https://felixkratz.github.io/SketchyBar/setup) | Pilihan pengembangan |
-| Window tiling | [AeroSpace](https://nikitabobko.github.io/AeroSpace/guide) | Pilihan pengembangan |
-
-Übersicht menjalankan widget berbasis JavaScript/JSX di desktop; ini pendekatan yang dekat dengan konsep skin Rainmeter. Tema ini memakai perintah bawaan macOS `pmset`, `uptime`, dan `sysctl`. Menu bar dan window manager tetap memakai bawaan macOS pada preset awal ini.
+Versi awal Übersicht telah diganti. Script apply melepas symlink overlay lama buatan proyek ini. Übersicht yang sudah terpasang dibiarkan tetap terpasang; aplikasi native ini tidak menggunakannya.
 
 ## Verifikasi
 
 ```sh
-npm test
+mkdir -p output
+xcrun swiftc -swift-version 5 Sources/Metrics.swift Sources/CalendarModel.swift tests/SensorsCheck.swift -o output/metrics-tests
+output/metrics-tests
 python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
-Tes mencakup pembacaan telemetry, nilai kosong, dan siklus apply/restore dengan preferensi tiruan. Tes tidak mengubah pengaturan desktop.
+Pemeriksaan mencakup delta CPU, start/pause/resume/selesai timer, rentang nilai sensor native, susunan kalender dan tahun kabisat, serta migrasi/restore Dock dengan preferensi tiruan. Tombol juga diperiksa langsung di UI macOS.
 
-Referensi implementasi: [dokumentasi widget Übersicht](https://github.com/felixhageloh/uebersicht#writing-widgets), [katalog Homebrew Übersicht](https://formulae.brew.sh/cask/ubersicht).
+## Aset
+
+- Wallpaper: `assets/wallpapers/gundam-hangar.png` (1586 × 992 PNG).
+- Dibuat menggunakan built-in ImageGen; [prompt lengkap](assets/wallpapers/PROMPT.md).
+- Proyek fan-made, tidak berafiliasi dengan pemilik Gundam.
+
+Implementasi memakai [NSPanel](https://developer.apple.com/documentation/appkit/nspanel), [Mach host statistics](https://developer.apple.com/documentation/kernel/1502863-host_statistics64), dan [IOKit power sources](https://developer.apple.com/documentation/iokit/1523867-iopsgetpowersourcedescription).
