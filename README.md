@@ -14,9 +14,12 @@ Wallpaper PNG diterapkan melalui pengaturan desktop macOS. Panel console, teleme
 - **Dock bawaan macOS** diposisikan di bawah. Ukuran dan perilakunya bisa diatur melalui System Settings → Desktop & Dock.
 - **CPU usage nyata** dari delta counter Mach, grafik riwayat 60 sampel, diperbarui setiap detik.
 - **RAM aktif + wired + compressed** dari statistik VM macOS, diperbarui setiap dua detik. Definisinya berbeda dari keseluruhan Memory Used di Activity Monitor.
-- **Baterai dan sumber daya** melalui IOKit, diperbarui setiap sepuluh detik.
+- **Notch jadwal sholat**: hover atau klik untuk membuka lokasi, lima waktu sholat, dan hitung mundur jadwal berikutnya. Mendukung pergantian hari dan jadwal Subuh besok.
+- **Baterai dan Wi-Fi di notch**: baterai melalui IOKit; koneksi dan sinyal Wi-Fi melalui Network/CoreWLAN. Jika macOS menyembunyikan nama jaringan, notch tetap menampilkan status koneksinya.
 
 Seret bagian kosong panel untuk memindahkannya. Posisi disimpan oleh AppKit. Ikon CPU di menu bar menyediakan kontrol panel, wallpaper, dan Quit.
+
+Notch memakai [AlAdhan](https://aladhan.com/prayer-times-api) dengan metode **Kemenag RI (20)** dan [IPWho](https://ipwhois.io/documentation) untuk perkiraan kota berdasarkan IP publik. Keduanya bisa dipakai tanpa API key. Lokasi IP dapat meleset saat memakai VPN atau jaringan operator; jadwal bukan feed resmi harian Kemenag. Hasil disimpan lokal, diperbarui setiap enam jam dan saat pergantian hari; kegagalan jaringan dicoba ulang setelah 15 menit. Nama Wi-Fi dan data baterai tetap lokal.
 
 ## Build dan pasang
 
@@ -51,10 +54,14 @@ Versi awal Übersicht telah diganti. Script apply melepas symlink overlay lama b
 mkdir -p output
 xcrun swiftc -swift-version 5 Sources/Metrics.swift Sources/CalendarModel.swift tests/SensorsCheck.swift -o output/metrics-tests
 output/metrics-tests
+xcrun swiftc -swift-version 5 Sources/PrayerTimes.swift tests/PrayerCheck.swift -o output/prayer-tests
+output/prayer-tests
+# Opsional: verifikasi endpoint live
+output/prayer-tests --live
 python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
-Pemeriksaan mencakup delta CPU, start/pause/resume/selesai timer, rentang nilai sensor native, susunan kalender dan tahun kabisat, serta migrasi/restore Dock dengan preferensi tiruan. Tombol juga diperiksa langsung di UI macOS.
+Pemeriksaan mencakup sensor, timer, kalender, migrasi/restore Dock, parsing API, timezone, pergantian jadwal setelah Isya, cache, serta respons API yang tidak valid.
 
 ## Aset
 

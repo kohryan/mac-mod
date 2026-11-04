@@ -1,6 +1,7 @@
 import Foundation
 import Darwin
 import IOKit.ps
+import CoreWLAN
 
 struct CPUTicks {
     let values: [UInt32]
@@ -50,6 +51,14 @@ struct Battery {
     let pluggedIn: Bool
 }
 
+struct WiFiStatus {
+    let powered: Bool
+    let connected: Bool
+    let name: String?
+    let signal: Double?
+    var label: String { !powered ? "Wi-Fi mati" : !connected ? "Wi-Fi terputus" : name ?? "Wi-Fi tersambung" }
+}
+
 final class MetricsReader {
     private let host = mach_host_self()
     deinit { mach_port_deallocate(mach_task_self_, host) }
@@ -93,5 +102,15 @@ final class MetricsReader {
                            pluggedIn: info[kIOPSPowerSourceStateKey] as? String == kIOPSACPowerValue)
         }
         return nil
+    }
+
+    func wifi(connected: Bool) -> WiFiStatus {
+        guard let interface = CWWiFiClient.shared().interface() else {
+            return WiFiStatus(powered: false, connected: false, name: nil, signal: nil)
+        }
+        let powered = interface.powerOn()
+        let rssi = interface.rssiValue()
+        let signal: Double? = rssi < 0 ? min(1, max(0, Double(rssi + 90) / 40)) : nil
+        return WiFiStatus(powered: powered, connected: powered && connected, name: interface.ssid(), signal: signal)
     }
 }

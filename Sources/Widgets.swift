@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import Network
 
 let accent = Color(red: 0.64, green: 0.90, blue: 0.94)
 let muted = Color.white.opacity(0.58)
@@ -10,17 +11,29 @@ final class DashboardModel: ObservableObject {
     @Published var cpuHistory: [Double] = []
     @Published var memory: (used: Double, total: Double)?
     @Published var battery: Battery?
+    @Published var wifi = WiFiStatus(powered: true, connected: false, name: nil, signal: nil)
     @Published var focus = FocusSession()
     @Published var message = "CLICK A CONTROL TO BEGIN"
     private let reader = MetricsReader()
     private var previous: CPUTicks?
     private var timer: Timer?
     private var ticks = 0
+    private let wifiMonitor = NWPathMonitor(requiredInterfaceType: .wifi)
+    private var wifiConnected = false
 
     init() {
         previous = reader.cpu()
         memory = reader.memory()
         battery = reader.battery()
+        wifi = reader.wifi(connected: false)
+        wifiMonitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.wifiConnected = path.status == .satisfied
+                self.wifi = self.reader.wifi(connected: self.wifiConnected)
+            }
+        }
+        wifiMonitor.start(queue: DispatchQueue(label: "local.kohryan.mac-mod.wifi"))
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.tick() }
         if let timer { RunLoop.main.add(timer, forMode: .common) }
     }
@@ -35,7 +48,7 @@ final class DashboardModel: ObservableObject {
             if let cpu { cpuHistory = Array((cpuHistory + [cpu]).suffix(60)) }
         } else { cpu = nil }
         if ticks % 2 == 0 { memory = reader.memory() }
-        if ticks % 10 == 0 { battery = reader.battery() }
+        if ticks % 10 == 0 { battery = reader.battery(); wifi = reader.wifi(connected: wifiConnected) }
     }
 
     func launch(_ identifier: String, name: String) {
@@ -197,15 +210,6 @@ struct TelemetryView: View {
             }
             ProgressView(value: model.memory.map { $0.used / $0.total } ?? 0).tint(accent)
             micro("ACTIVE · WIRED · COMPRESSED").foregroundStyle(muted)
-            Divider().overlay(Color.white.opacity(0.08))
-            HStack { micro("ENERGY").foregroundStyle(muted); Spacer()
-                Text(model.battery.map { "\(Int(($0.percent * 100).rounded()))%" } ?? "N/A").font(.system(size: 28, weight: .light, design: .monospaced)).monospacedDigit()
-            }
-            HStack {
-                Image(systemName: model.battery?.charging == true ? "battery.100percent.bolt" : "battery.75percent").foregroundStyle(accent)
-                micro(model.battery.map { $0.pluggedIn ? "AC CONNECTED" : "ON BATTERY" } ?? "NO BATTERY DATA").foregroundStyle(muted)
-                Spacer()
-            }
             Divider().overlay(Color.white.opacity(0.08))
             micro("NATIVE SENSORS / LOCAL ONLY").foregroundStyle(muted)
         }.padding(22).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

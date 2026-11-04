@@ -45,15 +45,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var panels: [GlassPanel] = []
     var statusItem: NSStatusItem?
     let model = DashboardModel()
+    let prayers = PrayerStore()
+    var notch: PrayerNotchPanel?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard let frame = NSScreen.screens.first?.visibleFrame else { return }
         let left = GlassPanel(title: "Pilot Console", frame: NSRect(x: frame.minX + 48, y: frame.maxY - 430, width: 300, height: 330), view: ConsoleView(model: model))
-        let right = GlassPanel(title: "System Telemetry", frame: NSRect(x: frame.maxX - 332, y: frame.maxY - 550, width: 284, height: 455), view: TelemetryView(model: model))
+        let right = GlassPanel(title: "System Telemetry", frame: NSRect(x: frame.maxX - 332, y: frame.maxY - 455, width: 284, height: 360), view: TelemetryView(model: model))
         let calendar = GlassPanel(title: "Calendar", frame: NSRect(x: frame.minX + 48, y: frame.maxY - 738, width: 300, height: 290), view: CalendarView(model: model))
         panels = [left, right, calendar]
+        notch = PrayerNotchPanel(model: model, prayers: prayers)
         let menu = NSMenu()
-        for (title, action) in [("Show Pilot Console", #selector(showConsole)), ("Show System Telemetry", #selector(showTelemetry)), ("Show Calendar", #selector(showCalendar)), ("Start at Login", #selector(toggleLogin)), ("Apply Gundam Wallpaper", #selector(applyWallpaper)), ("Restore Previous Wallpaper", #selector(restoreWallpaper)), ("Quit MacMod", #selector(quit))] {
+        for (title, action) in [("Show Prayer Notch", #selector(showNotch)), ("Show Pilot Console", #selector(showConsole)), ("Show System Telemetry", #selector(showTelemetry)), ("Show Calendar", #selector(showCalendar)), ("Start at Login", #selector(toggleLogin)), ("Apply Gundam Wallpaper", #selector(applyWallpaper)), ("Restore Previous Wallpaper", #selector(restoreWallpaper)), ("Quit MacMod", #selector(quit))] {
             let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
             item.target = self
             menu.addItem(item)
@@ -78,6 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc func showConsole() { panels.first?.makeKeyAndOrderFront(nil) }
+    @objc func showNotch() { notch?.show() }
     @objc func showTelemetry() { panels[1].makeKeyAndOrderFront(nil) }
     @objc func showCalendar() { panels[2].makeKeyAndOrderFront(nil) }
     func menuWillOpen(_ menu: NSMenu) {
