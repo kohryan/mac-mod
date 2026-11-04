@@ -14,10 +14,10 @@ Wallpaper PNG diterapkan melalui pengaturan desktop macOS. Panel console, teleme
 - **Dock bawaan macOS** diposisikan di bawah. Ukuran dan perilakunya bisa diatur melalui System Settings → Desktop & Dock.
 - **CPU usage nyata** dari delta counter Mach, grafik riwayat 60 sampel, diperbarui setiap detik.
 - **RAM aktif + wired + compressed** dari statistik VM macOS, diperbarui setiap dua detik. Definisinya berbeda dari keseluruhan Memory Used di Activity Monitor.
-- **Ikon mata di menu bar**: mata mengikuti arah kursor dan berkedip. Klik untuk membuka lokasi, lima waktu sholat, hitung mundur, baterai, dan Wi-Fi. Detail menutup saat klik di luar atau menekan Escape; hover tidak membuka panel.
+- **Ikon mata di tengah top bar**: ikon selebar 36 pt, mengikuti arah kursor dan berkedip. Klik untuk membuka lokasi, lima waktu sholat, hitung mundur, baterai, dan Wi-Fi. Detail menutup saat klik di luar atau menekan Escape; hover tidak membuka panel.
 - **Baterai dan Wi-Fi di notch**: baterai melalui IOKit; koneksi dan sinyal Wi-Fi melalui Network/CoreWLAN. Jika macOS menyembunyikan nama jaringan, notch tetap menampilkan status koneksinya.
 
-Seret bagian kosong panel desktop untuk memindahkannya. Posisi disimpan oleh AppKit. Klik kanan ikon mata untuk kontrol panel, wallpaper, startup, dan Quit. Ikon berada dalam layout menu bar macOS sehingga tidak menutupi menu aplikasi atau tab Chrome.
+Seret bagian kosong panel desktop untuk memindahkannya. Posisi disimpan oleh AppKit. Klik kanan ikon mata untuk kontrol panel, wallpaper, startup, dan Quit. Ikon diposisikan di tengah top bar layar utama, dengan tinggi mengikuti menu bar.
 
 Notch memakai [AlAdhan](https://aladhan.com/prayer-times-api) dengan metode **Kemenag RI (20)** dan [IPWho](https://ipwhois.io/documentation) untuk perkiraan kota berdasarkan IP publik. Keduanya bisa dipakai tanpa API key. Lokasi IP dapat meleset saat memakai VPN atau jaringan operator; jadwal bukan feed resmi harian Kemenag. Hasil disimpan lokal, diperbarui setiap enam jam dan saat pergantian hari; kegagalan jaringan dicoba ulang setelah 15 menit. Nama Wi-Fi dan data baterai tetap lokal.
 

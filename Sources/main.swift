@@ -43,11 +43,10 @@ func setWallpaper(restore: Bool) throws {
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var panels: [GlassPanel] = []
-    var statusItem: NSStatusItem?
+    var eyePanel: CenteredEyePanel?
     let model = DashboardModel()
     let prayers = PrayerStore()
     var notch: PrayerNotchController?
-    var eyeIcon: EyeStatusIcon?
     var statusMenu: NSMenu?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -64,17 +63,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(item)
         }
         menu.delegate = self
-        let status = NSStatusBar.system.statusItem(withLength: 36)
-        if let button = status.button {
-            button.setAccessibilityLabel("MacMod · Jadwal sholat")
-            button.toolTip = "MacMod · Klik untuk jadwal sholat"
-            button.target = self
-            button.action = #selector(statusClicked(_:))
-            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-            eyeIcon = EyeStatusIcon(button: button)
-        }
+        eyePanel = CenteredEyePanel(target: self, action: #selector(statusClicked(_:)))
         statusMenu = menu
-        statusItem = status
         let mainMenu = NSMenu()
         let appItem = NSMenuItem()
         appItem.submenu = menu.copy() as? NSMenu
@@ -91,10 +81,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc func showConsole() { panels.first?.makeKeyAndOrderFront(nil) }
     @objc func showNotch() {
-        guard let button = statusItem?.button else { return }
+        guard let button = eyePanel?.button else { return }
         notch?.show(relativeTo: button)
     }
-    @objc func statusClicked(_ sender: NSStatusBarButton) {
+    @objc func statusClicked(_ sender: NSButton) {
         if let event = NSApp.currentEvent, event.type == .rightMouseUp, let menu = statusMenu {
             NSMenu.popUpContextMenu(menu, with: event, for: sender)
         } else { notch?.toggle(relativeTo: sender) }

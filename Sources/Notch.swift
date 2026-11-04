@@ -85,23 +85,71 @@ final class PrayerNotchController {
         popover.appearance = NSAppearance(named: .darkAqua)
     }
 
-    func toggle(relativeTo button: NSStatusBarButton) {
+    func toggle(relativeTo button: NSView) {
         if popover.isShown { popover.performClose(nil) }
         else { show(relativeTo: button) }
     }
 
-    func show(relativeTo button: NSStatusBarButton) {
+    func show(relativeTo button: NSView) {
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
     }
 }
 
+final class CenteredEyePanel: NSPanel {
+    let button = NSButton(frame: .zero)
+    private var eyes: EyeStatusIcon?
+    private var screenObserver: NSObjectProtocol?
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
+
+    init(target: AnyObject, action: Selector) {
+        super.init(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        title = "MacMod Eyes"
+        isOpaque = false
+        backgroundColor = .clear
+        hasShadow = false
+        hidesOnDeactivate = false
+        level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
+        collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
+        button.title = ""
+        button.isBordered = false
+        button.imagePosition = .imageOnly
+        button.contentTintColor = .white
+        button.appearance = NSAppearance(named: .darkAqua)
+        button.setAccessibilityLabel("MacMod · Jadwal sholat")
+        button.toolTip = "Klik untuk jadwal sholat"
+        button.target = target
+        button.action = action
+        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        contentView = button
+        button.wantsLayer = true
+        button.layer?.backgroundColor = NSColor.black.cgColor
+        button.layer?.cornerRadius = 7
+        button.layer?.masksToBounds = true
+        position()
+        eyes = EyeStatusIcon(button: button)
+        screenObserver = NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in self?.position() }
+        orderFrontRegardless()
+    }
+
+    deinit {
+        if let screenObserver { NotificationCenter.default.removeObserver(screenObserver) }
+    }
+
+    private func position() {
+        guard let screen = NSScreen.screens.first else { return }
+        let height = max(NSStatusBar.system.thickness, screen.frame.maxY - screen.visibleFrame.maxY)
+        setFrame(NSRect(x: screen.frame.midX - 18, y: screen.frame.maxY - height, width: 36, height: height), display: true)
+    }
+}
+
 final class EyeStatusIcon {
-    private weak var button: NSStatusBarButton?
+    private weak var button: NSButton?
     private var timer: Timer?
     private var lastPose = ""
 
-    init(button: NSStatusBarButton) {
+    init(button: NSButton) {
         self.button = button
         update()
         timer = Timer.scheduledTimer(withTimeInterval: 0.12, repeats: true) { [weak self] _ in self?.update() }
