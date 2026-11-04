@@ -46,7 +46,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var statusItem: NSStatusItem?
     let model = DashboardModel()
     let prayers = PrayerStore()
-    var notch: PrayerNotchPanel?
+    var notch: PrayerNotchController?
+    var eyeIcon: EyeStatusIcon?
+    var statusMenu: NSMenu?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard let frame = NSScreen.screens.first?.visibleFrame else { return }
@@ -54,7 +56,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let right = GlassPanel(title: "System Telemetry", frame: NSRect(x: frame.maxX - 332, y: frame.maxY - 455, width: 284, height: 360), view: TelemetryView(model: model))
         let calendar = GlassPanel(title: "Calendar", frame: NSRect(x: frame.minX + 48, y: frame.maxY - 738, width: 300, height: 290), view: CalendarView(model: model))
         panels = [left, right, calendar]
-        notch = PrayerNotchPanel(model: model, prayers: prayers)
+        notch = PrayerNotchController(model: model, prayers: prayers)
         let menu = NSMenu()
         for (title, action) in [("Show Prayer Notch", #selector(showNotch)), ("Show Pilot Console", #selector(showConsole)), ("Show System Telemetry", #selector(showTelemetry)), ("Show Calendar", #selector(showCalendar)), ("Start at Login", #selector(toggleLogin)), ("Apply Gundam Wallpaper", #selector(applyWallpaper)), ("Restore Previous Wallpaper", #selector(restoreWallpaper)), ("Quit MacMod", #selector(quit))] {
             let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
@@ -62,9 +64,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(item)
         }
         menu.delegate = self
-        let status = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        status.button?.image = NSImage(systemSymbolName: "cpu", accessibilityDescription: "MacMod")
-        status.menu = menu
+        let status = NSStatusBar.system.statusItem(withLength: 36)
+        if let button = status.button {
+            button.setAccessibilityLabel("MacMod · Jadwal sholat")
+            button.toolTip = "MacMod · Klik untuk jadwal sholat"
+            button.target = self
+            button.action = #selector(statusClicked(_:))
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+            eyeIcon = EyeStatusIcon(button: button)
+        }
+        statusMenu = menu
         statusItem = status
         let mainMenu = NSMenu()
         let appItem = NSMenuItem()
@@ -81,7 +90,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc func showConsole() { panels.first?.makeKeyAndOrderFront(nil) }
-    @objc func showNotch() { notch?.show() }
+    @objc func showNotch() {
+        guard let button = statusItem?.button else { return }
+        notch?.show(relativeTo: button)
+    }
+    @objc func statusClicked(_ sender: NSStatusBarButton) {
+        if let event = NSApp.currentEvent, event.type == .rightMouseUp, let menu = statusMenu {
+            NSMenu.popUpContextMenu(menu, with: event, for: sender)
+        } else { notch?.toggle(relativeTo: sender) }
+    }
     @objc func showTelemetry() { panels[1].makeKeyAndOrderFront(nil) }
     @objc func showCalendar() { panels[2].makeKeyAndOrderFront(nil) }
     func menuWillOpen(_ menu: NSMenu) {

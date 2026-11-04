@@ -133,7 +133,6 @@ final class PrayerStore: ObservableObject {
     @Published var snapshot: PrayerSnapshot?
     @Published var loading = false
     @Published var error: String?
-    @Published var expanded = false
     private var retryAfter = Date.distantPast
     private var timer: Timer?
 
